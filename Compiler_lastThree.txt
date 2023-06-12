@@ -1,0 +1,185 @@
+Practical 12
+lex
+
+%{
+#include"y.tab.h"
+%}
+%%
+[a-zA-Z\_][a-zA-Z\_0-9]* return NAME;
+[0-9]+ return NUMBER;
+"+" return PLUS;
+"-" return MINUS;
+"=" return EQUL;
+%%
+
+
+YACC
+
+%{
+#include<stdio.h>
+int valid=1;
+%}
+%token NAME NUMBER EQUL PLUS MINUS
+%%
+Stmt : NAME EQUL exp
+	| exp
+	;
+exp : NUMBER PLUS NUMBER
+	| NUMBER MINUS NUMBER
+	| NUMBER MINUS exp
+	| NUMBER PLUS exp
+	;
+%%
+void yyerror(char * s)
+{
+	valid=0;
+	printf( "%s\n", s);
+}
+int yywrap(){
+	return 1;
+}
+int main(void)
+{
+	printf("Enter a expression: \n");
+	yyparse();
+	if(valid!=0){
+		printf("Valid expression \n\n");
+	}
+	else{
+		printf("Invalid expression \n\n");
+	}
+	return 0;
+}
+
+
+
+Practical 13
+yacc
+
+%{
+#include<stdio.h>
+#include<stdlib.h>
+%}
+%token PLUS MINUS MUL DIV NEWLINE RPAR LPAR
+%token NUMBER
+%%	
+	lines : lines line
+	|	;
+	line : expr NEWLINE { printf("%d\n> ", $1); }
+	| NEWLINE { printf ("> "); }	;
+	expr : expr PLUS term { $$ = $1 + $3; }
+	| expr MINUS term { $$ = $1 - $3; }
+	| term { $$ = $1; } 	;
+	term : term MUL factor { $$ = $1 * $3; }
+	| term DIV factor { if ($3 == 0)
+	yyerror("divide by zero");
+	else
+	$$ = $1 / $3;}
+	| factor { $$ = $1; }	;
+	factor : LPAR expr RPAR { $$ = $2; }
+	| NUMBER
+	{ $$ = $1; } 	;
+%%
+yylex() {
+	int c;
+	do {
+	c=getchar();
+	switch (c) {
+	case '0': case '1': case '2': case '3': case '4': case '5': case '6': 
+	case '7': case '8': case '9':
+	yylval= c - '0';
+	return NUMBER;
+	case '+': return PLUS; break;
+	case '-': return MINUS;break;
+	case '*': return MUL;break;
+	case '/': return DIV;break;
+	case '(': return LPAR;break;
+	case ')': return RPAR;break;
+	case '\n': return NEWLINE; break;	} // Switch case ends
+	} while (c!= EOF);
+	return(EOF);
+}
+void yyerror(char * s){	 printf ( "%s\n", s);  } 
+int yywrap(void){return 1;}
+void main() {
+	printf("Enter a expression: \n");
+	yyparse();
+}
+
+
+
+Practical 14
+
+lex
+
+%{
+#include <stdio.h>
+# include "y.tab.h"
+extern int yylval;
+%}
+
+%%
+
+[0-9]+ {
+yylval = atoi(yytext);
+return NUMBER;
+}
+
+[a-zA-Z]+ {return ALPHA;}
+
+[\t]+ ;
+
+[\n] {return '\n';}
+
+. {return yytext[0];}
+
+%%
+
+int yywrap(void){
+    return 0;
+}
+
+YACC
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+int yylex(void);
+int yyerror(char*s);
+%}
+
+%token NUMBER ALPHA 
+%left '+' '-'
+%left '*' '/'
+%left '(' ')'
+
+%%
+grammer: expr '\n' {
+printf("\n Arithematic Expression is Valid.");
+printf("\n Expression Result : %d\n",$$);
+exit(0);
+}
+
+expr : expr'+'expr {$$ = $1 + $3;} 
+     | expr'*'expr {$$ = $1 * $3;}
+     | expr'/'expr {$$ = $1 / $3;}
+     | expr'-'expr {$$ = $1 - $3;}
+     | '('expr')'  {$$ = $2;}
+     | NUMBER      {$$ = $1;}
+     | ALPHA 
+     ;  
+%%
+
+int main(void){
+	printf("Enter the Arithematic Expression : ");
+	yyparse();
+	return 0;
+}
+
+
+int yyerror(char*s){
+	printf("Arthematic Expression is Invalid \n\n");
+	exit(0);
+	
+}
+
